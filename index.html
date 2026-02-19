@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steam Library</title>
-    <link rel="icon" type="image/x-icon" href="https://store.steampowered.com/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="./Steam.ico">
     <style>
         :root {
             --steam-dark: #1b2838; --steam-blue: #2a475e; --steam-light-blue: #66c0f4;
@@ -19,11 +19,11 @@
 
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--steam-bg); color: #c6d4df; overflow: hidden; }
 
-        /* --- OVERLAY & LOADING --- */
+        /* --- OVERLAY --- */
         #game-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; }
         #game-iframe { width: 100%; height: 100%; border: none; transition: opacity 0.3s ease; }
         #game-iframe.loading { opacity: 0; }
-        #loader-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: var(--steam-light-blue); font-weight: bold; letter-spacing: 2px; }
+        /* "Preparing to launch" text removed from here */
         #exit-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #444; padding: 10px 20px; cursor: pointer; z-index: 10000; border-radius: 4px; }
 
         /* --- LAYOUT --- */
@@ -71,7 +71,6 @@
 <body>
 
     <div id="game-overlay">
-        <div id="loader-text">PREPARING TO LAUNCH...</div>
         <button id="exit-btn" onclick="stopGame()">✕ EXIT GAME</button>
         <iframe id="game-iframe"></iframe>
         <div id="sync-toast">CLOUD SAVE SYNCED ✅</div>
@@ -80,9 +79,8 @@
     <div id="add-modal">
         <div class="modal-content">
             <h3 style="margin:0 0 15px; color:white;">Add Non-Steam Game</h3>
-            <p style="font-size: 12px; color: #8f98a0; margin-bottom: 10px;">For local games, use: <b>./games/foldername/index.html</b></p>
             <input type="text" id="new-name" placeholder="Game Title">
-            <input type="text" id="new-url" placeholder="URL or Local Path">
+            <input type="text" id="new-url" placeholder="Local Path (e.g., ./games/FolderName/index.html)">
             <input type="text" id="new-banner" placeholder="Banner Image URL">
             <input type="text" id="new-trailer" placeholder="YouTube Video ID">
             <textarea id="new-desc" placeholder="Game Description"></textarea>
@@ -122,10 +120,10 @@
     </div>
 
     <script>
-        // Use relative paths for GitHub repo consistency
+        // Updated to reflect your new folder: Hollow-Knight
         const DEFAULT_GAMES = [{
             name: "Hollow Knight",
-            url: "./games/hollowkight/index.html", 
+            url: "./games/Hollow-Knight/index.html", 
             banner: "https://cdn2.steamgriddb.com/hero/222c44c26a02c54e3a9fd0d895b12df4.png",
             trailer: "UAO2urG23S4",
             desc: "Forge your own path in Hollow Knight! An epic action adventure through a vast ruined kingdom of insects and heroes."
@@ -141,7 +139,14 @@
             games.forEach((g, i) => {
                 const item = document.createElement('div');
                 item.className = `game-item ${i === activeIdx ? 'active' : ''}`;
-                item.innerHTML = `<span>${g.name}</span><span class="remove-icon" onclick="deleteGame(event, ${i})">REMOVE</span>`;
+                // Using Steam.ico as a fallback/default for list icons
+                const iconSrc = g.icon || './Steam.ico';
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <img src="${iconSrc}" style="width:16px; height:16px; border-radius:2px;">
+                        <span>${g.name}</span>
+                    </div>
+                    <span class="remove-icon" onclick="deleteGame(event, ${i})">REMOVE</span>`;
                 item.onclick = () => selectGame(i);
                 list.appendChild(item);
             });
@@ -157,18 +162,12 @@
             document.getElementById('main-title').innerText = g.name.toUpperCase();
             document.getElementById('main-banner').style.background = `linear-gradient(rgba(0,0,0,0) 40%, rgba(23, 26, 33, 1)), url('${g.banner}')`;
             
-            // Avoid reloading iframe if already on this trailer
             const newTrailerSrc = `https://www.youtube.com/embed/${g.trailer}?autoplay=0&mute=1&playlist=${g.trailer}&loop=1`;
             if (document.getElementById('main-trailer').src !== newTrailerSrc) {
                 document.getElementById('main-trailer').src = newTrailerSrc;
             }
             
             document.getElementById('main-desc').innerText = g.desc;
-            
-            const hasSave = localStorage.getItem(`pending_save_${g.name}`);
-            document.getElementById('import-btn-text').innerText = hasSave ? "Save Loaded ✅" : "Import .dat File";
-            document.getElementById('import-btn-text').style.color = hasSave ? "#75b022" : "#66c0f4";
-            
             updateTime();
         }
 
@@ -183,7 +182,7 @@
         }
 
         function resetLibrary() {
-            if (confirm("Reset library to default? All added games will be removed.")) {
+            if (confirm("Reset library? This fixes folder name changes.")) {
                 localStorage.clear();
                 games = DEFAULT_GAMES;
                 activeIdx = 0;
@@ -202,14 +201,7 @@
             const frame = document.getElementById('game-iframe');
             
             overlay.style.display = 'block';
-            frame.classList.add('loading');
             frame.src = g.url;
-
-            frame.onload = () => {
-                frame.classList.remove('loading');
-                const data = localStorage.getItem(`pending_save_${g.name}`);
-                if (data) frame.contentWindow.postMessage({type: "IMPORT_SAVE", data}, "*");
-            };
 
             playTimer = setInterval(() => {
                 let t = parseInt(localStorage.getItem(`time_${g.name}`)) || 0;
@@ -251,13 +243,6 @@
                 closeModal();
             }
         }
-
-        window.addEventListener("message", (e) => {
-            if (e.data.type === "SYNC_COMPLETE") {
-                document.getElementById('sync-toast').style.display = 'block';
-                setTimeout(() => document.getElementById('sync-toast').style.display = 'none', 4000);
-            }
-        });
 
         initLibrary();
     </script>
