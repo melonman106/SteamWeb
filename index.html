@@ -12,188 +12,229 @@
             --steam-input: #121a24; --steam-nav: #3d4450;
         }
 
-        /* --- MODERN STEAM SCROLLBAR --- */
         ::-webkit-scrollbar { width: 10px; background-color: transparent; }
         ::-webkit-scrollbar-thumb { background: #3d4450; border-radius: 10px; border: 2px solid var(--steam-bg); }
 
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Motiva Sans', Arial, sans-serif; background-color: var(--steam-bg); color: #c6d4df; overflow: hidden; }
 
-        /* --- LAYOUT --- */
-        .steam-wrapper { display: grid; grid-template-columns: 280px 1fr; height: 100vh; }
+        .steam-wrapper { display: grid; grid-template-columns: 320px 1fr; height: 100vh; }
 
-        /* --- SIDEBAR --- */
+        /* --- SIDEBAR OVERHAUL --- */
         .sidebar { background-color: var(--steam-sidebar); border-right: 1px solid #000; display: flex; flex-direction: column; }
-        .sidebar-nav { padding: 10px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(0,0,0,0.3); }
-        .home-icon { color: var(--steam-blue); font-size: 20px; cursor: pointer; }
+        .sidebar-header { padding: 25px 20px 10px; }
+        .lib-text { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 1px; display: block; margin-bottom: 10px; }
         
-        .sidebar-search { padding: 15px 15px; }
-        .search-box { 
-            background: #171d25; border: 1px solid #000; padding: 8px 12px; 
-            border-radius: 3px; display: flex; align-items: center; 
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
-        }
-        .search-box:focus-within { border-color: var(--steam-blue); box-shadow: 0 0 5px var(--steam-blue); }
-        .search-box input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 13px; }
+        .sidebar-nav-tabs { display: flex; gap: 20px; font-size: 13px; font-weight: bold; color: #8f98a0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+        .tab-active { color: #fff; position: relative; }
+        .tab-active::after { content: ""; position: absolute; bottom: -16px; left: 0; width: 100%; height: 3px; background: var(--steam-blue); }
 
-        .category-header { 
-            padding: 15px 20px 5px; font-size: 11px; font-weight: 800; color: #fff; 
-            display: flex; justify-content: space-between; align-items: center;
-            letter-spacing: 1px;
+        .sidebar-search { padding: 20px 15px; }
+        .search-container { 
+            background: #12171c; border: 1px solid #2a475e; padding: 10px 14px; 
+            border-radius: 4px; display: flex; align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-        .game-count { color: #8f98a0; font-weight: 400; }
+        .search-container input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 13px; }
+        .search-container input::placeholder { color: #3d4450; font-style: italic; }
+        
+        .filter-header { padding: 0 20px 10px; font-size: 11px; color: #8f98a0; font-weight: 800; display: flex; justify-content: space-between; text-transform: uppercase; }
 
         .game-list { flex-grow: 1; overflow-y: auto; }
         .game-item { 
-            padding: 5px 20px; color: #8f98a0; cursor: pointer; font-size: 13px;
-            display: flex; align-items: center; gap: 8px; transition: 0.1s;
+            padding: 8px 20px; color: #8f98a0; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 12px; transition: 0.1s;
         }
         .game-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .game-item.active { background: linear-gradient(to right, #3d4450, #212429); color: #fff; border-left: 2px solid var(--steam-blue); }
-
-        /* --- MAIN DASHBOARD --- */
-        .main-content { background: linear-gradient(to bottom, #2a475e 0%, #171a21 600px); overflow-y: auto; position: relative; }
-        .hero-banner { 
-            height: 480px; position: relative; display: flex; align-items: flex-end; padding: 40px;
-            background-size: cover !important; background-position: center !important;
+        .game-item.active { 
+            background: linear-gradient(to right, #3d4450, #212429); 
+            color: #fff; 
+            box-shadow: inset 4px 0 0 var(--steam-blue);
         }
-        .hero-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #171a21 5%, transparent 60%); }
+
+        /* --- MAIN CONTENT --- */
+        .main-content { background: #171a21; overflow-y: auto; position: relative; }
         
-        .hero-info { position: relative; z-index: 2; width: 100%; }
-        .game-logo { max-width: 400px; margin-bottom: 20px; }
-        .hero-title { font-size: 56px; margin: 0; font-weight: 900; text-transform: uppercase; letter-spacing: -2px; color: #fff; }
+        .hero-banner { 
+            height: 420px; position: relative; display: flex; align-items: flex-end; padding: 50px;
+            background-size: cover !important; background-position: center !important;
+            transition: background 0.4s ease-in-out;
+        }
+        .hero-banner::after { 
+            content: ""; position: absolute; inset: 0; 
+            background: linear-gradient(to top, #171a21 0%, rgba(23,26,33,0.5) 50%, rgba(23,26,33,0) 100%); 
+        }
+        
+        .hero-title { position: relative; z-index: 2; font-size: 64px; font-weight: 900; color: #fff; text-shadow: 0 5px 30px rgba(0,0,0,0.8); margin: 0; letter-spacing: -2px; }
 
         .action-bar { 
-            background: rgba(24, 26, 33, 0.8); padding: 25px 40px; 
-            display: flex; align-items: center; gap: 30px; 
-            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(30, 32, 40, 0.85); padding: 25px 50px; 
+            display: flex; align-items: center; gap: 40px; 
+            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.1);
             position: sticky; top: 0; z-index: 10;
         }
         .play-btn { 
             background: linear-gradient(to right, #75b022, #588a1b); color: #fff; 
-            border: none; padding: 12px 60px; font-size: 22px; font-weight: 800; 
-            border-radius: 3px; cursor: pointer; transition: 0.2s;
+            border: none; padding: 14px 80px; font-size: 24px; font-weight: 800; 
+            border-radius: 4px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
-        .play-btn:hover { transform: scale(1.02); filter: brightness(1.2); }
+        .play-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
 
-        .stat-group { display: flex; gap: 40px; }
-        .stat-item { display: flex; flex-direction: column; }
-        .stat-label { font-size: 11px; color: #8f98a0; text-transform: uppercase; font-weight: bold; }
-        .stat-value { font-size: 14px; color: #fff; }
+        .stat-box { border-left: 1px solid rgba(255,255,255,0.15); padding-left: 25px; }
+        .stat-lbl { font-size: 11px; color: #8f98a0; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
+        .stat-val { font-size: 15px; color: #fff; }
 
-        /* --- SHELF / CONTENT --- */
-        .content-shelf { padding: 40px; }
-        .shelf-header { font-size: 14px; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .trailer-container { width: 100%; aspect-ratio: 16/9; background: #000; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        /* --- CONTENT GRID --- */
+        .details-grid { padding: 50px; display: grid; grid-template-columns: 1fr 350px; gap: 60px; }
+        .shelf-title { font-size: 14px; color: #fff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 25px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .game-desc { line-height: 1.8; color: #acb2b8; font-size: 15px; margin-bottom: 40px; }
+        
+        .video-box { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
 
-        /* --- OVERLAY --- */
+        /* --- GAME OVERLAY --- */
         #game-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; }
         #game-iframe { width: 100%; height: 100%; border: none; }
-        #exit-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #444; padding: 8px 15px; cursor: pointer; z-index: 10000; font-size: 12px; }
+        #exit-btn { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555; padding: 12px 25px; cursor: pointer; z-index: 10000; border-radius: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="game-overlay">
-        <button id="exit-btn" onclick="stopGame()">✕ STOP</button>
+        <button id="exit-btn" onclick="stopGame()">✕ STOP GAME</button>
         <iframe id="game-iframe"></iframe>
     </div>
 
     <div class="steam-wrapper">
         <aside class="sidebar">
-            <div class="sidebar-nav">
-                <span class="home-icon">🏠</span>
-                <span style="font-size:12px; font-weight:bold; color:#fff">HOME</span>
+            <div class="sidebar-header">
+                <span class="lib-text">LIBRARY</span>
+                <div class="sidebar-nav-tabs">
+                    <span class="tab-active">ALL</span>
+                    <span>RECENT</span>
+                    <span>COLLECTIONS</span>
+                </div>
             </div>
 
             <div class="sidebar-search">
-                <div class="search-box">
-                    <input type="text" placeholder="Search by name">
+                <div class="search-container">
+                    <input type="text" id="game-search" placeholder="Search by name..." oninput="filterGames()">
                 </div>
             </div>
 
-            <div class="category-header">
-                <span>GAMES</span>
-                <span class="game-count" id="total-count">0</span>
+            <div class="filter-header">
+                <span>Games</span>
+                <span id="total-count">0</span>
             </div>
 
-            <div class="game-list" id="game-list">
-                </div>
-            
-            <div style="padding:15px; border-top:1px solid #000">
-                <button onclick="resetLibrary()" style="background:none; border:none; color:var(--steam-light-blue); cursor:pointer; font-size:11px">Reset Cache</button>
-            </div>
+            <div class="game-list" id="game-list"></div>
         </aside>
 
         <main class="main-content">
             <div class="hero-banner" id="main-banner">
-                <div class="hero-info">
-                    <h1 class="hero-title" id="main-title"></h1>
-                </div>
+                <h1 class="hero-title" id="main-title"></h1>
             </div>
 
             <div class="action-bar">
                 <button class="play-btn" onclick="launchGame()">PLAY</button>
-                <div class="stat-group">
-                    <div class="stat-item">
-                        <span class="stat-label">Last Played</span>
-                        <span class="stat-value" id="last-played">Today</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Playtime</span>
-                        <span class="stat-value" id="playtime-val">0 minutes</span>
-                    </div>
+                <div class="stat-box">
+                    <span class="stat-lbl">Last Played</span>
+                    <span class="stat-val" id="last-played">Feb 19, 2026</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-lbl">Playtime</span>
+                    <span class="stat-val" id="playtime-val">0 minutes</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-lbl">Achievements</span>
+                    <span class="stat-val">0 / 63</span>
                 </div>
             </div>
 
-            <div class="content-shelf">
-                <div class="shelf-header">Updates & Community</div>
-                <div class="trailer-container">
-                    <iframe id="main-trailer" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+            <div class="details-grid">
+                <div class="main-column">
+                    <div class="shelf-title">Recent Activity</div>
+                    <div class="video-box">
+                        <iframe id="main-trailer" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+                    </div>
+                    
+                    <div class="shelf-title" style="margin-top:50px">About the Game</div>
+                    <p id="main-desc" class="game-desc"></p>
+                </div>
+                
+                <div class="side-column">
+                    <div class="shelf-title">Friends</div>
+                    <div style="background: rgba(255,255,255,0.03); padding: 30px; border-radius: 4px; text-align: center; color: #555;">
+                        <p style="font-size:12px">Your friends haven't played this yet.</p>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
-        const GAMES = [{
-            name: "Hollow Knight",
-            url: "./games/Hollow-Knight/index.html", 
-            banner: "https://cdn2.steamgriddb.com/hero/222c44c26a02c54e3a9fd0d895b12df4.png",
-            trailer: "UAO2urG23S4"
-        }];
+        // ADD MORE GAMES HERE TO TEST SEARCH
+        const GAMES = [
+            {
+                name: "Hollow Knight",
+                url: "./games/Hollow-Knight/index.html", 
+                banner: "https://cdn2.steamgriddb.com/hero/222c44c26a02c54e3a9fd0d895b12df4.png",
+                trailer: "UAO2urG23S4",
+                desc: "Forge your own path in Hollow Knight! An epic action adventure through a vast ruined kingdom of insects and heroes. Explore twisting caverns, battle tainted creatures and befriend bizarre bugs, all in a classic, hand-drawn 2D style."
+            },
+            {
+                name: "Celeste",
+                url: "./games/Celeste/index.html", 
+                banner: "https://cdn2.steamgriddb.com/hero/0c2f829a2f60714b9c1d68378619d9b9.png",
+                trailer: "ioY_v85T16M",
+                desc: "Help Madeline survive her inner demons on her journey to the top of Celeste Mountain, in this super-tight, hand-crafted platformer from the creators of TowerFall."
+            }
+        ];
 
         let activeIdx = 0;
         let timer;
+        let filteredGames = [...GAMES];
 
         function init() {
+            renderList();
+            select(0);
+        }
+
+        function renderList() {
             const list = document.getElementById('game-list');
             list.innerHTML = "";
-            document.getElementById('total-count').innerText = GAMES.length;
+            document.getElementById('total-count').innerText = filteredGames.length;
 
-            GAMES.forEach((g, i) => {
+            filteredGames.forEach((g, i) => {
                 const item = document.createElement('div');
-                item.className = `game-item ${i === activeIdx ? 'active' : ''}`;
+                item.className = `game-item ${GAMES.indexOf(g) === activeIdx ? 'active' : ''}`;
                 item.innerHTML = `
-                    <img src="./Steam.ico" width="16" onerror="this.src='https://store.steampowered.com/favicon.ico'">
+                    <img src="https://store.steampowered.com/favicon.ico" width="16">
                     <span>${g.name}</span>
                 `;
-                item.onclick = () => select(i);
+                item.onclick = () => select(GAMES.indexOf(g));
                 list.appendChild(item);
             });
-            select(0);
+        }
+
+        function filterGames() {
+            const term = document.getElementById('game-search').value.toLowerCase();
+            filteredGames = GAMES.filter(g => g.name.toLowerCase().includes(term));
+            renderList();
         }
 
         function select(i) {
             activeIdx = i;
             const g = GAMES[i];
             
-            // UI Updates
-            document.querySelectorAll('.game-item').forEach((el, idx) => el.classList.toggle('active', idx === i));
-            document.getElementById('main-title').innerText = g.name;
+            // Highlight active item
+            document.querySelectorAll('.game-item').forEach((el) => {
+                el.classList.toggle('active', el.innerText.trim() === g.name);
+            });
+
+            document.getElementById('main-title').innerText = g.name.toUpperCase();
             document.getElementById('main-banner').style.background = `url('${g.banner}')`;
             document.getElementById('main-trailer').src = `https://www.youtube.com/embed/${g.trailer}?mute=1&autoplay=0`;
+            document.getElementById('main-desc').innerText = g.desc;
             
-            // Stats from LocalStorage
             const time = localStorage.getItem(`time_${g.name}`) || 0;
             document.getElementById('playtime-val').innerText = `${Math.floor(time / 60)} minutes`;
         }
@@ -214,11 +255,6 @@
             clearInterval(timer);
             document.getElementById('game-overlay').style.display = 'none';
             document.getElementById('game-iframe').src = "";
-        }
-
-        function resetLibrary() {
-            localStorage.clear();
-            location.reload();
         }
 
         init();
