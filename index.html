@@ -7,244 +7,221 @@
     <link rel="icon" type="image/x-icon" href="./Steam.ico">
     <style>
         :root {
-            --steam-dark: #1b2838; --steam-blue: #2a475e; --steam-light-blue: #66c0f4;
+            --steam-dark: #1b2838; --steam-blue: #1a9fff; --steam-light-blue: #66c0f4;
             --steam-bg: #171a21; --steam-green: #75b022; --steam-sidebar: #212429;
-            --steam-input: #121a24; --steam-red: #a32a2a;
+            --steam-input: #121a24; --steam-nav: #3d4450;
         }
 
-        /* --- STEAM SCROLLBARS --- */
-        ::-webkit-scrollbar { width: 12px; background-color: var(--steam-bg); }
-        ::-webkit-scrollbar-thumb { background: #3d4450; border: 3px solid var(--steam-bg); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #4e5664; }
+        /* --- MODERN STEAM SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 10px; background-color: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3d4450; border-radius: 10px; border: 2px solid var(--steam-bg); }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--steam-bg); color: #c6d4df; overflow: hidden; }
-
-        /* --- OVERLAY --- */
-        #game-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; }
-        #game-iframe { width: 100%; height: 100%; border: none; transition: opacity 0.3s ease; }
-        #game-iframe.loading { opacity: 0; }
-        /* "Preparing to launch" text removed from here */
-        #exit-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.8); color: #fff; border: 1px solid #444; padding: 10px 20px; cursor: pointer; z-index: 10000; border-radius: 4px; }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Motiva Sans', Arial, sans-serif; background-color: var(--steam-bg); color: #c6d4df; overflow: hidden; }
 
         /* --- LAYOUT --- */
         .steam-wrapper { display: grid; grid-template-columns: 280px 1fr; height: 100vh; }
+
+        /* --- SIDEBAR --- */
         .sidebar { background-color: var(--steam-sidebar); border-right: 1px solid #000; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 20px; font-size: 12px; color: #fff; font-weight: bold; letter-spacing: 1px; }
+        .sidebar-nav { padding: 10px 20px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(0,0,0,0.3); }
+        .home-icon { color: var(--steam-blue); font-size: 20px; cursor: pointer; }
         
+        .sidebar-search { padding: 15px 15px; }
+        .search-box { 
+            background: #171d25; border: 1px solid #000; padding: 8px 12px; 
+            border-radius: 3px; display: flex; align-items: center; 
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+        }
+        .search-box:focus-within { border-color: var(--steam-blue); box-shadow: 0 0 5px var(--steam-blue); }
+        .search-box input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 13px; }
+
+        .category-header { 
+            padding: 15px 20px 5px; font-size: 11px; font-weight: 800; color: #fff; 
+            display: flex; justify-content: space-between; align-items: center;
+            letter-spacing: 1px;
+        }
+        .game-count { color: #8f98a0; font-weight: 400; }
+
         .game-list { flex-grow: 1; overflow-y: auto; }
         .game-item { 
-            padding: 10px 20px; color: #8f98a0; cursor: pointer; font-size: 14px;
-            display: flex; justify-content: space-between; align-items: center;
-            transition: background 0.2s;
+            padding: 5px 20px; color: #8f98a0; cursor: pointer; font-size: 13px;
+            display: flex; align-items: center; gap: 8px; transition: 0.1s;
         }
         .game-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .game-item.active { background: var(--steam-blue); color: #fff; }
-        
-        .remove-icon { color: #555; font-size: 10px; padding: 2px 6px; border-radius: 3px; visibility: hidden; border: 1px solid #333; }
-        .game-item:hover .remove-icon { visibility: visible; }
-        .remove-icon:hover { background: var(--steam-red); color: white; border-color: transparent; }
+        .game-item.active { background: linear-gradient(to right, #3d4450, #212429); color: #fff; border-left: 2px solid var(--steam-blue); }
 
-        .sidebar-footer { border-top: 1px solid #000; display: flex; flex-direction: column; padding: 10px 0; }
-        .footer-btn { padding: 10px 20px; background: transparent; border: none; color: #66c0f4; text-align: left; cursor: pointer; font-size: 13px; }
-        .footer-btn:hover { color: white; }
-
-        /* --- CONTENT --- */
-        .main-content { background: linear-gradient(to bottom, #2a475e 0%, #171a21 500px); overflow-y: auto; position: relative; }
-        .banner { height: 420px; background-position: center !important; background-size: cover !important; display: flex; align-items: flex-end; padding: 40px; transition: background 0.5s ease-in-out; }
-        .action-bar { background: rgba(0,0,0,0.4); padding: 25px 40px; display: flex; align-items: center; gap: 40px; backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .play-btn { background: linear-gradient(to right, #75b022, #588a1b); color: #fff; border: none; padding: 12px 60px; font-size: 22px; font-weight: 800; border-radius: 2px; cursor: pointer; transition: filter 0.2s; }
-        .play-btn:hover { filter: brightness(1.1); }
+        /* --- MAIN DASHBOARD --- */
+        .main-content { background: linear-gradient(to bottom, #2a475e 0%, #171a21 600px); overflow-y: auto; position: relative; }
+        .hero-banner { 
+            height: 480px; position: relative; display: flex; align-items: flex-end; padding: 40px;
+            background-size: cover !important; background-position: center !important;
+        }
+        .hero-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #171a21 5%, transparent 60%); }
         
-        .stat-box { display: flex; flex-direction: column; }
-        .stat-label { font-size: 11px; color: #8f98a0; text-transform: uppercase; }
+        .hero-info { position: relative; z-index: 2; width: 100%; }
+        .game-logo { max-width: 400px; margin-bottom: 20px; }
+        .hero-title { font-size: 56px; margin: 0; font-weight: 900; text-transform: uppercase; letter-spacing: -2px; color: #fff; }
+
+        .action-bar { 
+            background: rgba(24, 26, 33, 0.8); padding: 25px 40px; 
+            display: flex; align-items: center; gap: 30px; 
+            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.05);
+            position: sticky; top: 0; z-index: 10;
+        }
+        .play-btn { 
+            background: linear-gradient(to right, #75b022, #588a1b); color: #fff; 
+            border: none; padding: 12px 60px; font-size: 22px; font-weight: 800; 
+            border-radius: 3px; cursor: pointer; transition: 0.2s;
+        }
+        .play-btn:hover { transform: scale(1.02); filter: brightness(1.2); }
+
+        .stat-group { display: flex; gap: 40px; }
+        .stat-item { display: flex; flex-direction: column; }
+        .stat-label { font-size: 11px; color: #8f98a0; text-transform: uppercase; font-weight: bold; }
         .stat-value { font-size: 14px; color: #fff; }
 
-        /* --- MODAL --- */
-        #add-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 10002; align-items: center; justify-content: center; }
-        .modal-content { background: var(--steam-dark); padding: 30px; width: 450px; border: 1px solid var(--steam-blue); box-shadow: 0 0 30px rgba(0,0,0,0.5); }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; background: var(--steam-input); border: 1px solid #333; color: white; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--steam-light-blue); }
-        
-        #sync-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--steam-green); color: white; padding: 12px 30px; border-radius: 4px; font-weight: bold; display: none; z-index: 10001; }
+        /* --- SHELF / CONTENT --- */
+        .content-shelf { padding: 40px; }
+        .shelf-header { font-size: 14px; color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .trailer-container { width: 100%; aspect-ratio: 16/9; background: #000; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+
+        /* --- OVERLAY --- */
+        #game-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; }
+        #game-iframe { width: 100%; height: 100%; border: none; }
+        #exit-btn { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #444; padding: 8px 15px; cursor: pointer; z-index: 10000; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <div id="game-overlay">
-        <button id="exit-btn" onclick="stopGame()">✕ EXIT GAME</button>
+        <button id="exit-btn" onclick="stopGame()">✕ STOP</button>
         <iframe id="game-iframe"></iframe>
-        <div id="sync-toast">CLOUD SAVE SYNCED ✅</div>
-    </div>
-
-    <div id="add-modal">
-        <div class="modal-content">
-            <h3 style="margin:0 0 15px; color:white;">Add Non-Steam Game</h3>
-            <input type="text" id="new-name" placeholder="Game Title">
-            <input type="text" id="new-url" placeholder="Local Path (e.g., ./games/FolderName/index.html)">
-            <input type="text" id="new-banner" placeholder="Banner Image URL">
-            <input type="text" id="new-trailer" placeholder="YouTube Video ID">
-            <textarea id="new-desc" placeholder="Game Description"></textarea>
-            <button class="play-btn" style="width:100%; font-size:16px; margin-top:10px" onclick="saveNewGame()">ADD TO LIBRARY</button>
-            <button class="footer-btn" style="width:100%; text-align:center" onclick="closeModal()">Cancel</button>
-        </div>
     </div>
 
     <div class="steam-wrapper">
         <aside class="sidebar">
-            <div class="sidebar-header">GAMES</div>
-            <div class="game-list" id="game-list"></div>
-            <div class="sidebar-footer">
-                <button class="footer-btn" onclick="openModal()">+ Add a Game</button>
-                <button class="footer-btn" style="color:#a32a2a; font-size:11px" onclick="resetLibrary()">⚠ Reset Library</button>
+            <div class="sidebar-nav">
+                <span class="home-icon">🏠</span>
+                <span style="font-size:12px; font-weight:bold; color:#fff">HOME</span>
+            </div>
+
+            <div class="sidebar-search">
+                <div class="search-box">
+                    <input type="text" placeholder="Search by name">
+                </div>
+            </div>
+
+            <div class="category-header">
+                <span>GAMES</span>
+                <span class="game-count" id="total-count">0</span>
+            </div>
+
+            <div class="game-list" id="game-list">
+                </div>
+            
+            <div style="padding:15px; border-top:1px solid #000">
+                <button onclick="resetLibrary()" style="background:none; border:none; color:var(--steam-light-blue); cursor:pointer; font-size:11px">Reset Cache</button>
             </div>
         </aside>
 
         <main class="main-content">
-            <div class="banner" id="main-banner"><h1 id="main-title" style="font-size: 50px; text-shadow: 0 4px 15px #000; margin:0;"></h1></div>
-            <div class="action-bar">
-                <button class="play-btn" onclick="launchGame()">PLAY</button>
-                <div class="stat-box"><span class="stat-label">Playtime</span><span class="stat-value" id="playtime-val">0 minutes</span></div>
-                <div class="stat-box">
-                    <span class="stat-label">Save Management</span>
-                    <button id="import-btn-text" style="background:none; border:none; color:#66c0f4; cursor:pointer; padding:0; text-align:left; font-size:14px;" onclick="document.getElementById('saveIn').click()">Import .dat File</button>
-                    <input type="file" id="saveIn" style="display:none" onchange="handleSave(this)">
+            <div class="hero-banner" id="main-banner">
+                <div class="hero-info">
+                    <h1 class="hero-title" id="main-title"></h1>
                 </div>
             </div>
-            <div style="padding:40px; max-width:1000px">
-                <div style="width:100%; aspect-ratio:16/9; background:#000; margin-bottom:30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5)">
-                    <iframe id="main-trailer" width="100%" height="100%" frameborder="0"></iframe>
+
+            <div class="action-bar">
+                <button class="play-btn" onclick="launchGame()">PLAY</button>
+                <div class="stat-group">
+                    <div class="stat-item">
+                        <span class="stat-label">Last Played</span>
+                        <span class="stat-value" id="last-played">Today</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Playtime</span>
+                        <span class="stat-value" id="playtime-val">0 minutes</span>
+                    </div>
                 </div>
-                <div class="description"><h3>About This Game</h3><p id="main-desc" style="line-height:1.6; color:#acb2b8"></p></div>
+            </div>
+
+            <div class="content-shelf">
+                <div class="shelf-header">Updates & Community</div>
+                <div class="trailer-container">
+                    <iframe id="main-trailer" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        // Updated to reflect your new folder: Hollow-Knight
-        const DEFAULT_GAMES = [{
+        const GAMES = [{
             name: "Hollow Knight",
             url: "./games/Hollow-Knight/index.html", 
             banner: "https://cdn2.steamgriddb.com/hero/222c44c26a02c54e3a9fd0d895b12df4.png",
-            trailer: "UAO2urG23S4",
-            desc: "Forge your own path in Hollow Knight! An epic action adventure through a vast ruined kingdom of insects and heroes."
+            trailer: "UAO2urG23S4"
         }];
 
-        let games = JSON.parse(localStorage.getItem('steam_library')) || DEFAULT_GAMES;
         let activeIdx = 0;
-        let playTimer;
+        let timer;
 
-        function initLibrary() {
+        function init() {
             const list = document.getElementById('game-list');
             list.innerHTML = "";
-            games.forEach((g, i) => {
+            document.getElementById('total-count').innerText = GAMES.length;
+
+            GAMES.forEach((g, i) => {
                 const item = document.createElement('div');
                 item.className = `game-item ${i === activeIdx ? 'active' : ''}`;
-                // Using Steam.ico as a fallback/default for list icons
-                const iconSrc = g.icon || './Steam.ico';
                 item.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="${iconSrc}" style="width:16px; height:16px; border-radius:2px;">
-                        <span>${g.name}</span>
-                    </div>
-                    <span class="remove-icon" onclick="deleteGame(event, ${i})">REMOVE</span>`;
-                item.onclick = () => selectGame(i);
+                    <img src="./Steam.ico" width="16" onerror="this.src='https://store.steampowered.com/favicon.ico'">
+                    <span>${g.name}</span>
+                `;
+                item.onclick = () => select(i);
                 list.appendChild(item);
             });
-            if (games.length > 0) selectGame(activeIdx);
+            select(0);
         }
 
-        function selectGame(i) {
-            if (games.length === 0) return;
+        function select(i) {
             activeIdx = i;
-            const g = games[i];
+            const g = GAMES[i];
             
+            // UI Updates
             document.querySelectorAll('.game-item').forEach((el, idx) => el.classList.toggle('active', idx === i));
-            document.getElementById('main-title').innerText = g.name.toUpperCase();
-            document.getElementById('main-banner').style.background = `linear-gradient(rgba(0,0,0,0) 40%, rgba(23, 26, 33, 1)), url('${g.banner}')`;
+            document.getElementById('main-title').innerText = g.name;
+            document.getElementById('main-banner').style.background = `url('${g.banner}')`;
+            document.getElementById('main-trailer').src = `https://www.youtube.com/embed/${g.trailer}?mute=1&autoplay=0`;
             
-            const newTrailerSrc = `https://www.youtube.com/embed/${g.trailer}?autoplay=0&mute=1&playlist=${g.trailer}&loop=1`;
-            if (document.getElementById('main-trailer').src !== newTrailerSrc) {
-                document.getElementById('main-trailer').src = newTrailerSrc;
-            }
-            
-            document.getElementById('main-desc').innerText = g.desc;
-            updateTime();
-        }
-
-        function deleteGame(e, i) {
-            e.stopPropagation();
-            if (confirm(`Delete ${games[i].name} from library?`)) {
-                games.splice(i, 1);
-                localStorage.setItem('steam_library', JSON.stringify(games));
-                activeIdx = 0;
-                initLibrary();
-            }
-        }
-
-        function resetLibrary() {
-            if (confirm("Reset library? This fixes folder name changes.")) {
-                localStorage.clear();
-                games = DEFAULT_GAMES;
-                activeIdx = 0;
-                initLibrary();
-            }
-        }
-
-        function updateTime() {
-            const t = localStorage.getItem(`time_${games[activeIdx].name}`) || 0;
-            document.getElementById('playtime-val').innerText = `${Math.floor(t / 60)} minutes`;
+            // Stats from LocalStorage
+            const time = localStorage.getItem(`time_${g.name}`) || 0;
+            document.getElementById('playtime-val').innerText = `${Math.floor(time / 60)} minutes`;
         }
 
         function launchGame() {
-            const g = games[activeIdx];
-            const overlay = document.getElementById('game-overlay');
-            const frame = document.getElementById('game-iframe');
+            const g = GAMES[activeIdx];
+            document.getElementById('game-overlay').style.display = 'block';
+            document.getElementById('game-iframe').src = g.url;
             
-            overlay.style.display = 'block';
-            frame.src = g.url;
-
-            playTimer = setInterval(() => {
+            timer = setInterval(() => {
                 let t = parseInt(localStorage.getItem(`time_${g.name}`)) || 0;
                 localStorage.setItem(`time_${g.name}`, ++t);
-                updateTime();
+                document.getElementById('playtime-val').innerText = `${Math.floor(t / 60)} minutes`;
             }, 1000);
         }
 
         function stopGame() {
-            clearInterval(playTimer);
+            clearInterval(timer);
             document.getElementById('game-overlay').style.display = 'none';
             document.getElementById('game-iframe').src = "";
         }
 
-        function handleSave(input) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                localStorage.setItem(`pending_save_${games[activeIdx].name}`, e.target.result);
-                selectGame(activeIdx);
-            };
-            reader.readAsText(input.files[0]);
+        function resetLibrary() {
+            localStorage.clear();
+            location.reload();
         }
 
-        function openModal() { document.getElementById('add-modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('add-modal').style.display = 'none'; }
-        
-        function saveNewGame() {
-            const name = document.getElementById('new-name').value;
-            const url = document.getElementById('new-url').value;
-            if (name && url) {
-                games.push({
-                    name, url, 
-                    banner: document.getElementById('new-banner').value || 'https://images.unsplash.com/photo-1550745165-9bc0b252726f',
-                    trailer: document.getElementById('new-trailer').value || 'dQw4w9WgXcQ',
-                    desc: document.getElementById('new-desc').value || 'Custom game.'
-                });
-                localStorage.setItem('steam_library', JSON.stringify(games));
-                initLibrary();
-                closeModal();
-            }
-        }
-
-        initLibrary();
+        init();
     </script>
 </body>
 </html>
