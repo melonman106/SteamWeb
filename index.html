@@ -3,261 +3,306 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam Library</title>
-    <link rel="icon" type="image/x-icon" href="./Steam.ico">
+    <title>Steam Pro</title>
     <style>
         :root {
-            --steam-dark: #1b2838; --steam-blue: #1a9fff; --steam-light-blue: #66c0f4;
-            --steam-bg: #171a21; --steam-green: #75b022; --steam-sidebar: #212429;
-            --steam-input: #121a24; --steam-nav: #3d4450;
+            --mac-red: #ff5f56; --mac-yellow: #ffbd2e; --mac-green: #27c93f;
+            --accent-blue: #007aff;
+            --bg: #000;
+            --titlebar-height: 42px;
         }
 
-        ::-webkit-scrollbar { width: 10px; background-color: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3d4450; border-radius: 10px; border: 2px solid var(--steam-bg); }
+        body, html { 
+            margin: 0; padding: 0; height: 100vh; width: 100vw;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            background: #000; color: #fff; overflow: hidden;
+        }
 
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Motiva Sans', Arial, sans-serif; background-color: var(--steam-bg); color: #c6d4df; overflow: hidden; }
+        .app-shell { display: grid; grid-template-columns: 260px 1fr; height: 100vh; }
 
-        .steam-wrapper { display: grid; grid-template-columns: 320px 1fr; height: 100vh; }
+        /* SIDEBAR */
+        .sidebar { background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(50px); border-right: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; display: flex; flex-direction: column; z-index: 100; }
+        .traffic-lights { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; border: none; cursor: pointer; }
+        .section-label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.2); text-transform: uppercase; margin: 25px 0 8px 10px; letter-spacing: 1px; }
 
-        /* --- SIDEBAR OVERHAUL --- */
-        .sidebar { background-color: var(--steam-sidebar); border-right: 1px solid #000; display: flex; flex-direction: column; }
-        .sidebar-header { padding: 25px 20px 10px; }
-        .lib-text { font-size: 24px; font-weight: 900; color: #fff; letter-spacing: 1px; display: block; margin-bottom: 10px; }
+        .nav-button { padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: rgba(255,255,255,0.5); display: flex; align-items: center; gap: 10px; transition: 0.2s; position: relative; }
+        .nav-button:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-button.active { background: var(--accent-blue); color: #fff; font-weight: 600; }
+
+        /* PROFILE CORNER */
+        .profile-corner { position: absolute; top: 15px; right: 20px; z-index: 1000; display: flex; align-items: center; gap: 10px; background: rgba(30,30,30,0.6); padding: 5px 15px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; backdrop-filter: blur(10px); }
+        .avatar { width: 24px; height: 24px; background: var(--accent-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+
+        /* MAIN CONTENT */
+        .main-content { position: relative; overflow-y: auto; scroll-behavior: smooth; background: #000; text-align: left; }
+        .hero { height: 450px; width: 100%; background-size: cover !important; background-position: center !important; display: flex; align-items: flex-end; padding: 60px; box-sizing: border-box; position: relative; }
+        .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, #000 0%, transparent 100%); }
+        .hero-title { position: relative; z-index: 5; font-size: 70px; font-weight: 900; margin: 0; letter-spacing: -3px; }
+
+        /* ACTION BAR */
+        .play-bar { position: sticky; top: 0; z-index: 50; padding: 20px 60px; background: rgba(0,0,0,0.85); backdrop-filter: blur(25px); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: flex-start; gap: 30px; }
+        .btn-play { background: var(--accent-blue); color: #fff; border: none; padding: 12px 60px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 15px; transition: 0.2s; }
+        .btn-play:hover { background: #3395ff; }
+        .btn-remove { background: rgba(255, 95, 86, 0.1); color: var(--mac-red); border: 1px solid rgba(255, 95, 86, 0.2); padding: 10px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: 0.2s; margin-left: auto; }
+        .btn-remove:hover { background: var(--mac-red); color: #fff; }
+
+        /* GAME OVERLAY */
+        #game-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 2000; flex-direction: column; }
+        .game-title-bar { 
+            height: var(--titlebar-height); 
+            background: #1a1a1a; 
+            display: grid; 
+            grid-template-columns: 100px 1fr 100px;
+            align-items: center; 
+            padding: 0 15px;
+            border-bottom: 1px solid #333; 
+        }
+        .game-title-text { text-align: center; font-size: 13px; font-weight: 500; color: #fff; }
+        #game-frame { border: none; width: 100%; height: calc(100vh - var(--titlebar-height)); }
+
+        /* MODALS */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(15px); }
+        .modal-card { background: #1c1c1e; width: 420px; padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); }
+        input, textarea { width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; color: #fff; padding: 12px; border-radius: 10px; margin: 8px 0 15px 0; box-sizing: border-box; }
         
-        .sidebar-nav-tabs { display: flex; gap: 20px; font-size: 13px; font-weight: bold; color: #8f98a0; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
-        .tab-active { color: #fff; position: relative; }
-        .tab-active::after { content: ""; position: absolute; bottom: -16px; left: 0; width: 100%; height: 3px; background: var(--steam-blue); }
-
-        .sidebar-search { padding: 20px 15px; }
-        .search-container { 
-            background: #12171c; border: 1px solid #2a475e; padding: 10px 14px; 
-            border-radius: 4px; display: flex; align-items: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        .search-container input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 13px; }
-        .search-container input::placeholder { color: #3d4450; font-style: italic; }
-        
-        .filter-header { padding: 0 20px 10px; font-size: 11px; color: #8f98a0; font-weight: 800; display: flex; justify-content: space-between; text-transform: uppercase; }
-
-        .game-list { flex-grow: 1; overflow-y: auto; }
-        .game-item { 
-            padding: 8px 20px; color: #8f98a0; cursor: pointer; font-size: 13px;
-            display: flex; align-items: center; gap: 12px; transition: 0.1s;
-        }
-        .game-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-        .game-item.active { 
-            background: linear-gradient(to right, #3d4450, #212429); 
-            color: #fff; 
-            box-shadow: inset 4px 0 0 var(--steam-blue);
-        }
-
-        /* --- MAIN CONTENT --- */
-        .main-content { background: #171a21; overflow-y: auto; position: relative; }
-        
-        .hero-banner { 
-            height: 420px; position: relative; display: flex; align-items: flex-end; padding: 50px;
-            background-size: cover !important; background-position: center !important;
-            transition: background 0.4s ease-in-out;
-        }
-        .hero-banner::after { 
-            content: ""; position: absolute; inset: 0; 
-            background: linear-gradient(to top, #171a21 0%, rgba(23,26,33,0.5) 50%, rgba(23,26,33,0) 100%); 
-        }
-        
-        .hero-title { position: relative; z-index: 2; font-size: 64px; font-weight: 900; color: #fff; text-shadow: 0 5px 30px rgba(0,0,0,0.8); margin: 0; letter-spacing: -2px; }
-
-        .action-bar { 
-            background: rgba(30, 32, 40, 0.85); padding: 25px 50px; 
-            display: flex; align-items: center; gap: 40px; 
-            backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.1);
-            position: sticky; top: 0; z-index: 10;
-        }
-        .play-btn { 
-            background: linear-gradient(to right, #75b022, #588a1b); color: #fff; 
-            border: none; padding: 14px 80px; font-size: 24px; font-weight: 800; 
-            border-radius: 4px; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
-        .play-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
-
-        .stat-box { border-left: 1px solid rgba(255,255,255,0.15); padding-left: 25px; }
-        .stat-lbl { font-size: 11px; color: #8f98a0; text-transform: uppercase; font-weight: bold; margin-bottom: 4px; display: block; }
-        .stat-val { font-size: 15px; color: #fff; }
-
-        /* --- CONTENT GRID --- */
-        .details-grid { padding: 50px; display: grid; grid-template-columns: 1fr 350px; gap: 60px; }
-        .shelf-title { font-size: 14px; color: #fff; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 25px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        .game-desc { line-height: 1.8; color: #acb2b8; font-size: 15px; margin-bottom: 40px; }
-        
-        .video-box { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-
-        /* --- GAME OVERLAY --- */
-        #game-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; }
-        #game-iframe { width: 100%; height: 100%; border: none; }
-        #exit-btn { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid #555; padding: 12px 25px; cursor: pointer; z-index: 10000; border-radius: 4px; font-weight: bold; }
+        .scroll-area { padding: 40px 60px; max-width: 1000px; }
+        .playtime-display { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .playtime-val { color: #fff; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div id="game-overlay">
-        <button id="exit-btn" onclick="stopGame()">✕ STOP GAME</button>
-        <iframe id="game-iframe"></iframe>
+    <div class="profile-corner" onclick="openProfileModal()">
+        <div class="avatar" id="user-initial">G</div>
+        <span id="user-display-name">Guest</span>
     </div>
 
-    <div class="steam-wrapper">
+    <div id="game-overlay">
+        <div class="game-title-bar">
+            <div class="traffic-lights">
+                <div class="dot" onclick="closeGame()" style="background:var(--mac-red)"></div>
+                <div class="dot" style="background:var(--mac-yellow)"></div>
+                <div class="dot" style="background:var(--mac-green)"></div>
+            </div>
+            <div class="game-title-text" id="active-game-title">Steam Game</div>
+            <div></div> 
+        </div>
+        <iframe id="game-frame" src=""></iframe>
+    </div>
+
+    <div id="modal-cloud" class="modal">
+        <div class="modal-card">
+            <h2>Account & Cloud</h2>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="gh-user" placeholder="Display Name">
+                <button style="background:#333; color:white; border:none; padding:10px; border-radius:10px; height:40px; margin-top:8px;" onclick="saveName()">Save</button>
+            </div>
+            <input type="password" id="gh-token" placeholder="GitHub Token">
+            <input type="text" id="gh-repo" placeholder="username/repo">
+            <button class="btn-play" style="width:100%" onclick="saveCloud()">Sync Cloud</button>
+            <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 15px;">
+                <label style="font-size: 11px; color: #555;">UPLOAD SAVE (.dat)</label>
+                <input type="file" id="upload-save" accept=".dat" onchange="importSave(event)">
+            </div>
+            <button class="nav-button" style="width:100%; justify-content:center; margin-top:10px" onclick="closeModals()">Close</button>
+        </div>
+    </div>
+
+    <div id="modal-add" class="modal">
+        <div class="modal-card">
+            <h2>Add Game</h2>
+            <input type="text" id="add-name" placeholder="Name">
+            <input type="text" id="add-folder" placeholder="Folder Name">
+            <input type="text" id="add-banner" placeholder="Banner URL">
+            <input type="text" id="add-video" placeholder="YouTube ID">
+            <textarea id="add-desc" placeholder="Description" rows="3"></textarea>
+            <button class="btn-play" style="width:100%" onclick="saveGame()">Save</button>
+            <button class="nav-button" style="width:100%; justify-content:center; margin-top:10px" onclick="closeModals()">Cancel</button>
+        </div>
+    </div>
+
+    <div class="app-shell">
         <aside class="sidebar">
-            <div class="sidebar-header">
-                <span class="lib-text">LIBRARY</span>
-                <div class="sidebar-nav-tabs">
-                    <span class="tab-active">ALL</span>
-                    <span>RECENT</span>
-                    <span>COLLECTIONS</span>
-                </div>
+            <div class="traffic-lights" style="margin-bottom: 25px;">
+                <div class="dot" style="background:var(--mac-red)"></div>
+                <div class="dot" style="background:var(--mac-yellow)"></div>
+                <div class="dot" style="background:var(--mac-green)"></div>
             </div>
-
-            <div class="sidebar-search">
-                <div class="search-container">
-                    <input type="text" id="game-search" placeholder="Search by name..." oninput="filterGames()">
-                </div>
-            </div>
-
-            <div class="filter-header">
-                <span>Games</span>
-                <span id="total-count">0</span>
-            </div>
-
-            <div class="game-list" id="game-list"></div>
+            <span class="section-label">Library</span>
+            <div id="nav-lib"></div>
+            <div class="nav-button" style="color:var(--accent-blue); margin-top:10px;" onclick="document.getElementById('modal-add').style.display='flex'">+ Add Game</div>
+            
+            <span class="section-label">Friends</span>
+            <div id="nav-friends"></div>
+            <div class="nav-button" style="color:var(--accent-blue)" onclick="addFriendCloud()">+ Sync Friend</div>
         </aside>
 
-        <main class="main-content">
-            <div class="hero-banner" id="main-banner">
-                <h1 class="hero-title" id="main-title"></h1>
-            </div>
-
-            <div class="action-bar">
-                <button class="play-btn" onclick="launchGame()">PLAY</button>
-                <div class="stat-box">
-                    <span class="stat-lbl">Last Played</span>
-                    <span class="stat-val" id="last-played">Feb 19, 2026</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-lbl">Playtime</span>
-                    <span class="stat-val" id="playtime-val">0 minutes</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-lbl">Achievements</span>
-                    <span class="stat-val">0 / 63</span>
-                </div>
-            </div>
-
-            <div class="details-grid">
-                <div class="main-column">
-                    <div class="shelf-title">Recent Activity</div>
-                    <div class="video-box">
-                        <iframe id="main-trailer" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media"></iframe>
-                    </div>
-                    
-                    <div class="shelf-title" style="margin-top:50px">About the Game</div>
-                    <p id="main-desc" class="game-desc"></p>
-                </div>
-                
-                <div class="side-column">
-                    <div class="shelf-title">Friends</div>
-                    <div style="background: rgba(255,255,255,0.03); padding: 30px; border-radius: 4px; text-align: center; color: #555;">
-                        <p style="font-size:12px">Your friends haven't played this yet.</p>
-                    </div>
-                </div>
-            </div>
-        </main>
+        <main class="main-content" id="view-port"></main>
     </div>
 
     <script>
-        // ADD MORE GAMES HERE TO TEST SEARCH
-        const GAMES = [
-            {
-                name: "Hollow Knight",
-                url: "./games/Hollow-Knight/index.html", 
-                banner: "https://cdn2.steamgriddb.com/hero/222c44c26a02c54e3a9fd0d895b12df4.png",
-                trailer: "UAO2urG23S4",
-                desc: "Forge your own path in Hollow Knight! An epic action adventure through a vast ruined kingdom of insects and heroes. Explore twisting caverns, battle tainted creatures and befriend bizarre bugs, all in a classic, hand-drawn 2D style."
-            },
-            {
-                name: "Celeste",
-                url: "./games/Celeste/index.html", 
-                banner: "https://cdn2.steamgriddb.com/hero/0c2f829a2f60714b9c1d68378619d9b9.png",
-                trailer: "ioY_v85T16M",
-                desc: "Help Madeline survive her inner demons on her journey to the top of Celeste Mountain, in this super-tight, hand-crafted platformer from the creators of TowerFall."
-            }
-        ];
-
+        let myGames = JSON.parse(localStorage.getItem('steam_custom')) || [];
+        let friends = JSON.parse(localStorage.getItem('steam_friends')) || [];
         let activeIdx = 0;
-        let timer;
-        let filteredGames = [...GAMES];
+        let activeFriendIdx = null;
+        let playStartTime = null;
 
-        function init() {
-            renderList();
-            select(0);
+        function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); }
+        function openProfileModal() {
+            document.getElementById('gh-user').value = localStorage.getItem('gh_user') || "";
+            document.getElementById('gh-token').value = localStorage.getItem('gh_token') || "";
+            document.getElementById('gh-repo').value = localStorage.getItem('gh_repo') || "";
+            document.getElementById('modal-cloud').style.display = 'flex';
         }
 
-        function renderList() {
-            const list = document.getElementById('game-list');
-            list.innerHTML = "";
-            document.getElementById('total-count').innerText = filteredGames.length;
-
-            filteredGames.forEach((g, i) => {
-                const item = document.createElement('div');
-                item.className = `game-item ${GAMES.indexOf(g) === activeIdx ? 'active' : ''}`;
-                item.innerHTML = `
-                    <img src="https://store.steampowered.com/favicon.ico" width="16">
-                    <span>${g.name}</span>
-                `;
-                item.onclick = () => select(GAMES.indexOf(g));
-                list.appendChild(item);
-            });
+        function saveName() {
+            localStorage.setItem('gh_user', document.getElementById('gh-user').value || "Guest");
+            refreshUI(); alert("Name Saved!");
         }
 
-        function filterGames() {
-            const term = document.getElementById('game-search').value.toLowerCase();
-            filteredGames = GAMES.filter(g => g.name.toLowerCase().includes(term));
-            renderList();
+        function removeGame(index) {
+            if (confirm("Are you sure you want to remove this game?")) {
+                myGames.splice(index, 1);
+                localStorage.setItem('steam_custom', JSON.stringify(myGames));
+                activeIdx = 0;
+                refreshUI();
+                updateCloud();
+            }
         }
 
-        function select(i) {
-            activeIdx = i;
-            const g = GAMES[i];
-            
-            // Highlight active item
-            document.querySelectorAll('.game-item').forEach((el) => {
-                el.classList.toggle('active', el.innerText.trim() === g.name);
-            });
-
-            document.getElementById('main-title').innerText = g.name.toUpperCase();
-            document.getElementById('main-banner').style.background = `url('${g.banner}')`;
-            document.getElementById('main-trailer').src = `https://www.youtube.com/embed/${g.trailer}?mute=1&autoplay=0`;
-            document.getElementById('main-desc').innerText = g.desc;
-            
-            const time = localStorage.getItem(`time_${g.name}`) || 0;
-            document.getElementById('playtime-val').innerText = `${Math.floor(time / 60)} minutes`;
+        function addFriendCloud() {
+            const rawUrl = prompt("Friend's GitHub Raw profile.json URL:");
+            if (rawUrl) {
+                friends.push({ url: rawUrl, user: "Loading...", library: [] });
+                localStorage.setItem('steam_friends', JSON.stringify(friends));
+                syncFriend(friends.length - 1);
+            }
         }
 
-        function launchGame() {
-            const g = GAMES[activeIdx];
-            document.getElementById('game-overlay').style.display = 'block';
-            document.getElementById('game-iframe').src = g.url;
-            
-            timer = setInterval(() => {
-                let t = parseInt(localStorage.getItem(`time_${g.name}`)) || 0;
-                localStorage.setItem(`time_${g.name}`, ++t);
-                document.getElementById('playtime-val').innerText = `${Math.floor(t / 60)} minutes`;
-            }, 1000);
+        async function syncFriend(idx) {
+            try {
+                const res = await fetch(friends[idx].url);
+                const data = await res.json();
+                friends[idx].user = data.user || "Unknown";
+                friends[idx].library = data.library || [];
+                localStorage.setItem('steam_friends', JSON.stringify(friends));
+                refreshUI();
+            } catch (e) { alert("Sync Error"); }
         }
 
-        function stopGame() {
-            clearInterval(timer);
+        function saveCloud() {
+            localStorage.setItem('gh_token', document.getElementById('gh-token').value);
+            localStorage.setItem('gh_repo', document.getElementById('gh-repo').value);
+            updateCloud(); closeModals();
+        }
+
+        async function updateCloud() {
+            const token = localStorage.getItem('gh_token');
+            const repo = localStorage.getItem('gh_repo');
+            if (!token || !repo) return;
+            const content = btoa(JSON.stringify({ user: localStorage.getItem('gh_user'), library: myGames }));
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}/contents/profile.json`, { headers: { 'Authorization': `token ${token}` } });
+                const data = await res.json();
+                await fetch(`https://api.github.com/repos/${repo}/contents/profile.json`, {
+                    method: 'PUT', headers: { 'Authorization': `token ${token}` },
+                    body: JSON.stringify({ message: "Sync", content, sha: data.sha })
+                });
+            } catch (e) { console.log("Cloud Push Failed"); }
+        }
+
+        function importSave(event) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = JSON.parse(e.target.result);
+                myGames = data.library || data.games || [];
+                localStorage.setItem('steam_custom', JSON.stringify(myGames));
+                refreshUI();
+            };
+            reader.readAsText(event.target.files[0]);
+        }
+
+        function launchGame(folder, name) {
+            playStartTime = Date.now();
+            document.getElementById('active-game-title').innerText = name;
+            document.getElementById('game-frame').src = `./games/${folder}/index.html`;
+            document.getElementById('game-overlay').style.display = 'flex';
+        }
+
+        function closeGame() {
+            if (playStartTime) {
+                myGames[activeIdx].playtime = (myGames[activeIdx].playtime || 0) + (Date.now() - playStartTime);
+                localStorage.setItem('steam_custom', JSON.stringify(myGames));
+            }
             document.getElementById('game-overlay').style.display = 'none';
-            document.getElementById('game-iframe').src = "";
+            document.getElementById('game-frame').src = "";
+            refreshUI(); updateCloud();
         }
 
-        init();
+        function saveGame() {
+            myGames.push({ 
+                name: document.getElementById('add-name').value, 
+                folder: document.getElementById('add-folder').value,
+                banner: document.getElementById('add-banner').value,
+                video: document.getElementById('add-video').value,
+                desc: document.getElementById('add-desc').value,
+                playtime: 0
+            });
+            localStorage.setItem('steam_custom', JSON.stringify(myGames));
+            refreshUI(); closeModals();
+        }
+
+        function refreshUI() {
+            const userName = localStorage.getItem('gh_user') || "Guest";
+            document.getElementById('user-display-name').innerText = userName;
+            document.getElementById('user-initial').innerText = userName[0].toUpperCase();
+
+            const lib = document.getElementById('nav-lib'); lib.innerHTML = "";
+            myGames.forEach((g, i) => {
+                const b = document.createElement('div');
+                b.className = `nav-button ${activeFriendIdx === null && activeIdx === i ? 'active' : ''}`;
+                b.innerText = g.name;
+                b.onclick = () => { activeFriendIdx = null; activeIdx = i; refreshUI(); };
+                lib.appendChild(b);
+            });
+
+            const fri = document.getElementById('nav-friends'); fri.innerHTML = "";
+            friends.forEach((f, i) => {
+                const b = document.createElement('div');
+                b.className = `nav-button ${activeFriendIdx === i ? 'active' : ''}`;
+                b.innerText = f.user;
+                b.onclick = () => { activeFriendIdx = i; refreshUI(); };
+                fri.appendChild(b);
+            });
+            renderView();
+        }
+
+        function renderView() {
+            const port = document.getElementById('view-port');
+            if (activeFriendIdx !== null) {
+                const f = friends[activeFriendIdx];
+                port.innerHTML = `<div style="padding:100px 60px;">
+                    <h1 style="font-size: 50px;">${f.user}</h1>
+                    <div style="display:grid; gap:10px;">${f.library.map(g => `<div style="padding:20px; background:#111; border-radius:10px;">${g.name}</div>`).join('')}</div>
+                </div>`;
+            } else {
+                const g = myGames[activeIdx];
+                if (!g) { port.innerHTML = `<div style="padding:100px;"><h1>Library Empty</h1></div>`; return; }
+                port.innerHTML = `
+                    <div class="hero" style="background:url('${g.banner}')"><h1 class="hero-title">${g.name}</h1></div>
+                    <div class="play-bar">
+                        <button class="btn-play" onclick="launchGame('${g.folder}', '${g.name}')">PLAY</button>
+                        <div class="playtime-display"><div>PLAYTIME</div><div class="playtime-val">${Math.floor((g.playtime||0)/60000)} MINS</div></div>
+                        <button class="btn-remove" onclick="removeGame(${activeIdx})">REMOVE GAME</button>
+                    </div>
+                    <div class="scroll-area">
+                        ${g.video ? `<iframe width="100%" height="500" src="https://www.youtube.com/embed/${g.video}" frameborder="0" style="border-radius:15px; margin-bottom:40px"></iframe>` : ''}
+                        <p style="color:#888; font-size:18px; line-height:1.6; white-space: pre-line;">${g.desc}</p>
+                    </div>`;
+            }
+        }
+        refreshUI();
     </script>
 </body>
 </html>
