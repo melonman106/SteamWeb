@@ -65,9 +65,9 @@
   {
     "name": "Hollow Knight",
     "folder": "Hollow-Knight",
-    "banner": "",
-    "video": "",
-    "desc": ""
+    "banner": "/assets/hk.jpeg",
+    "video": "https://www.youtube.com/watch?v=UAO2urG23S4",
+    "desc": " is a 2017 action-adventure Metroidvania video game by Australian studio Team Cherry where a nameless insect warrior explores a ruined underground bug kingdom."
   },
   {
     "name": "Ovo3",
