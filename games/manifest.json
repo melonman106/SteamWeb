@@ -84,18 +84,18 @@
     "desc": ""
   },
   {
-    "name": "SonicMania",
+    "name": "Sonic Mania",
     "folder": "SonicMania",
-    "banner": "",
-    "video": "",
-    "desc": ""
+    "banner": "/assets/sm.jpeg",
+    "video": "https://www.youtube.com/watch?v=VYQNnrccbj8",
+    "desc": "Sonic Mania is a 2D side-scrolling platform game released in 2017 that pays homage to the original Sega Genesis Sonic the Hedgehog games."
   },
   {
-    "name": "SuperMario64",
+    "name": "Super Mario 64",
     "folder": "SuperMario64",
-    "banner": "",
-    "video": "",
-    "desc": ""
+    "banner": "/assets/sm64.jpg",
+    "video": "https://www.youtube.com/watch?v=8Fk5sRwbEWI",
+    "desc": "Super Mario 64 is a landmark 1996 three-dimensional platform game for the Nintendo 64 that redefined video game design."
   },
   {
     "name": "Undertale",
