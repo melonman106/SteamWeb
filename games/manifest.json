@@ -100,8 +100,8 @@
   {
     "name": "Undertale",
     "folder": "Undertale",
-    "banner": "",
+    "banner": "./assets/undetale.png",
     "video": "",
-    "desc": ""
+    "desc": "A minimal example. Copy this folder structure for each new game."
   }
 ]
