@@ -304,6 +304,17 @@
             border-radius: 10px;
         }
 
+        .nav-item .builtin-tag {
+            font-size: 8px;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 1px 5px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         .sidebar-footer {
             padding: 10px 8px;
             border-top: 1px solid var(--border);
@@ -827,7 +838,6 @@
             cursor: pointer;
         }
 
-        /* Toast notification */
         .toast {
             position: fixed;
             bottom: 24px;
@@ -848,7 +858,6 @@
 
         .toast.show { transform: translateX(-50%) translateY(0); }
 
-        /* Search bar */
         .search-wrap {
             position: relative;
             flex: 1;
@@ -878,7 +887,6 @@
 
         * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
 
-        /* Notification dot */
         .notif-dot {
             width: 6px;
             height: 6px;
@@ -889,13 +897,11 @@
             right: 2px;
         }
 
-        /* Edit modal */
         #modal-edit .modal-window { width: 440px; }
     </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════ GAME OVERLAY ═══════════════════════════════ -->
 <div id="game-overlay">
     <div class="game-titlebar">
         <div class="traffic-lights">
@@ -912,7 +918,6 @@
         allow="autoplay; fullscreen; gamepad; microphone; camera"></iframe>
 </div>
 
-<!-- ═══════════════════════════════ MODAL: PROFILE / CLOUD ═══════════════════════════════ -->
 <div id="modal-cloud" class="modal">
     <div class="modal-window">
         <div class="modal-titlebar">
@@ -948,7 +953,6 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════ MODAL: ADD GAME ═══════════════════════════════ -->
 <div id="modal-add" class="modal">
     <div class="modal-window">
         <div class="modal-titlebar">
@@ -978,7 +982,6 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════ MODAL: EDIT GAME ═══════════════════════════════ -->
 <div id="modal-edit" class="modal">
     <div class="modal-window">
         <div class="modal-titlebar">
@@ -1009,10 +1012,7 @@
     </div>
 </div>
 
-<!-- ═══════════════════════════════ MAIN WINDOW ═══════════════════════════════ -->
 <div class="window-frame">
-
-    <!-- TITLEBAR -->
     <div class="titlebar">
         <div class="titlebar-left">
             <div class="traffic-lights">
@@ -1032,7 +1032,6 @@
                 Steam Pro
             </div>
         </div>
-
         <div class="titlebar-center">
             <div class="breadcrumb" id="breadcrumb">
                 <span>Library</span>
@@ -1040,7 +1039,6 @@
                 <span class="current" id="breadcrumb-current">—</span>
             </div>
         </div>
-
         <div class="titlebar-right">
             <div class="search-wrap">
                 <input type="text" id="search-input" placeholder="Search library…"
@@ -1056,10 +1054,7 @@
         </div>
     </div>
 
-    <!-- BODY -->
     <div class="app-body">
-
-        <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-scroll">
                 <div class="section-label">
@@ -1068,14 +1063,12 @@
                             title="Add game">+</button>
                 </div>
                 <div id="nav-lib"></div>
-
                 <div class="section-label">
                     Friends
                     <button onclick="addFriendCloud()" title="Add friend">+</button>
                 </div>
                 <div id="nav-friends"></div>
             </div>
-
             <div class="sidebar-footer">
                 <div class="nav-item" onclick="openProfileModal()">
                     <div class="icon">⚙</div>
@@ -1088,7 +1081,6 @@
             </div>
         </aside>
 
-         <!-- MAIN CONTENT -->
         <main class="main">
             <div class="view-toolbar" id="view-toolbar" style="display:none;">
                 <button class="tool-btn primary" id="tb-play-btn">▶ Play</button>
@@ -1103,87 +1095,81 @@
                 <div class="toolbar-sep"></div>
                 <button class="tool-btn danger" id="tb-remove-btn">⊖ Remove</button>
             </div>
-
-            <div class="view-content" id="view-port">
-                <!-- rendered here -->
-            </div>
+            <div class="view-content" id="view-port"></div>
         </main>
-
     </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-    /* ═══════════════════════════════════════════════
-       STATE
-    ═══════════════════════════════════════════════ */
     let myGames         = JSON.parse(localStorage.getItem('steam_custom'))  || [];
     let friends         = JSON.parse(localStorage.getItem('steam_friends')) || [];
+    let builtinGames    = [];
+    let hiddenBuiltin   = JSON.parse(localStorage.getItem('steam_hidden'))  || [];
     let activeIdx       = -1;
     let activeFriendIdx = null;
     let playStartTime   = null;
     let playTimerInt    = null;
     let searchQuery     = '';
 
-    /* ═══════════════════════════════════════════════
-       UTILITIES
-    ═══════════════════════════════════════════════ */
-    function closeModals() {
-        document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+    async function loadManifest() {
+        try {
+            const res = await fetch('games/manifest.json');
+            if (!res.ok) { console.warn('No games/manifest.json found'); return; }
+            builtinGames = await res.json();
+            if (!Array.isArray(builtinGames)) return;
+            for (const bg of builtinGames) {
+                if (hiddenBuiltin.includes(bg.folder)) continue;
+                const existing = myGames.find(g => g.folder === bg.folder);
+                if (existing) {
+                    existing.name   = bg.name   || existing.name;
+                    existing.desc   = bg.desc   || existing.desc;
+                    existing.banner = bg.banner || existing.banner;
+                    existing.video  = bg.video  || existing.video;
+                    existing.builtin = true;
+                } else {
+                    myGames.push({
+                        name: bg.name || bg.folder, folder: bg.folder,
+                        banner: bg.banner || '', video: bg.video || '',
+                        desc: bg.desc || '', playtime: 0,
+                        added: Date.now(), builtin: true
+                    });
+                }
+            }
+            save();
+        } catch (e) { console.warn('Could not load games manifest', e); }
     }
+
+    function closeModals() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
 
     function fmtTime(ms) {
         if (!ms || ms < 0) return '0 min';
         const min = Math.floor(ms / 60000);
         if (min < 60) return `${min} min`;
-        const h = Math.floor(min / 60);
-        const m = min % 60;
-        return `${h}h ${m}m`;
+        return `${Math.floor(min/60)}h ${min%60}m`;
     }
 
     function fmtSeconds(sec) {
-        const m = Math.floor(sec / 60).toString().padStart(2, '0');
-        const s = (sec % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
+        return `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
     }
 
     function showToast(msg, duration = 2800) {
         const t = document.getElementById('toast');
-        t.textContent = msg;
-        t.classList.add('show');
+        t.textContent = msg; t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), duration);
     }
 
-    function save() {
-        localStorage.setItem('steam_custom', JSON.stringify(myGames));
-    }
+    function save() { localStorage.setItem('steam_custom', JSON.stringify(myGames)); }
+    function saveFriends() { localStorage.setItem('steam_friends', JSON.stringify(friends)); }
+    function saveHidden() { localStorage.setItem('steam_hidden', JSON.stringify(hiddenBuiltin)); }
 
-    function saveFriends() {
-        localStorage.setItem('steam_friends', JSON.stringify(friends));
-    }
-
-    /* ═══════════════════════════════════════════════
-       FULLSCREEN / WINDOW CONTROLS
-    ═══════════════════════════════════════════════ */
     function toggleFullscreen() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {
-                showToast('Fullscreen not available');
-            });
-        } else {
-            document.exitFullscreen();
-        }
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => showToast('Fullscreen not available'));
+        else document.exitFullscreen();
     }
+    function toggleMinimize() { showToast('Minimize is not available in the browser'); }
 
-    function toggleMinimize() {
-        showToast('Minimize is not available in the browser');
-    }
-
-    /* ═══════════════════════════════════════════════
-       PROFILE
-    ═══════════════════════════════════════════════ */
     function openProfileModal() {
         document.getElementById('gh-user').value  = localStorage.getItem('gh_user')  || '';
         document.getElementById('gh-token').value = localStorage.getItem('gh_token') || '';
@@ -1193,154 +1179,91 @@
 
     function saveName() {
         const n = document.getElementById('gh-user').value.trim() || 'Guest';
-        localStorage.setItem('gh_user', n);
-        refreshUI();
+        localStorage.setItem('gh_user', n); refreshUI();
         showToast(`Display name set to "${n}"`);
     }
 
-    /* ═══════════════════════════════════════════════
-       CLOUD SYNC
-    ═══════════════════════════════════════════════ */
     function saveCloud() {
         const token = document.getElementById('gh-token').value.trim();
         const repo  = document.getElementById('gh-repo').value.trim();
         if (token) localStorage.setItem('gh_token', token);
         if (repo)  localStorage.setItem('gh_repo', repo);
-        saveName();
-        updateCloud();
-        closeModals();
+        saveName(); updateCloud(); closeModals();
     }
 
     async function updateCloud() {
         const token = localStorage.getItem('gh_token');
         const repo  = localStorage.getItem('gh_repo');
-        if (!token || !repo) {
-            showToast('Add a GitHub token and repo first');
-            return;
-        }
+        if (!token || !repo) { showToast('Add a GitHub token and repo first'); return; }
         showToast('☁ Syncing to cloud…');
-        const payload = {
-            user: localStorage.getItem('gh_user') || 'Guest',
-            library: myGames
-        };
+        const payload = { user: localStorage.getItem('gh_user') || 'Guest', library: myGames };
         const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
         try {
-            const check = await fetch(
-                `https://api.github.com/repos/${repo}/contents/profile.json`,
-                { headers: { Authorization: `token ${token}` } }
-            );
+            const check = await fetch(`https://api.github.com/repos/${repo}/contents/profile.json`, { headers: { Authorization: `token ${token}` } });
             const existing = check.ok ? await check.json() : null;
             const body = { message: 'Steam Pro sync', content };
             if (existing?.sha) body.sha = existing.sha;
-
-            const res = await fetch(
-                `https://api.github.com/repos/${repo}/contents/profile.json`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        Authorization: `token ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                }
-            );
-            if (res.ok) {
-                showToast('✓ Cloud sync successful!');
-            } else {
-                const err = await res.json();
-                showToast(`Cloud sync failed: ${err.message}`);
-            }
-        } catch (e) {
-            showToast('Cloud sync failed — check connection');
-            console.warn('Cloud push failed', e);
-        }
+            const res = await fetch(`https://api.github.com/repos/${repo}/contents/profile.json`, {
+                method: 'PUT', headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+            });
+            if (res.ok) showToast('✓ Cloud sync successful!');
+            else { const err = await res.json(); showToast(`Cloud sync failed: ${err.message}`); }
+        } catch (e) { showToast('Cloud sync failed — check connection'); }
     }
 
-    /* ═══════════════════════════════════════════════
-       EXPORT / IMPORT
-    ═══════════════════════════════════════════════ */
     function exportSave() {
         const data = JSON.stringify({ user: localStorage.getItem('gh_user') || 'Guest', library: myGames }, null, 2);
         const blob = new Blob([data], { type: 'application/json' });
         const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = 'steam_pro_library.dat';
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('✓ Library exported');
+        const a = document.createElement('a'); a.href = url; a.download = 'steam_pro_library.dat'; a.click();
+        URL.revokeObjectURL(url); showToast('✓ Library exported');
     }
 
     function importSave(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = e => {
             try {
                 const data = JSON.parse(e.target.result);
-                myGames = data.library || data.games || [];
-                save();
-                refreshUI();
-                if (myGames.length > 0) selectGame(0);
-                else showEmpty();
-                closeModals();
-                showToast(`✓ Imported ${myGames.length} game(s)`);
-            } catch {
-                showToast('Import failed — invalid file');
-            }
+                myGames = data.library || data.games || []; save(); refreshUI();
+                if (myGames.length > 0) selectGame(0); else showEmpty();
+                closeModals(); showToast(`✓ Imported ${myGames.length} game(s)`);
+            } catch { showToast('Import failed — invalid file'); }
         };
         reader.readAsText(file);
     }
 
-    /* ═══════════════════════════════════════════════
-       FRIENDS
-    ═══════════════════════════════════════════════ */
     function addFriendCloud() {
         const url = prompt("Paste your friend's GitHub Raw profile.json URL:");
         if (!url || !url.startsWith('http')) return;
-        const exists = friends.some(f => f.url === url);
-        if (exists) { showToast('Friend already added'); return; }
-        friends.push({ url, user: 'Loading…', library: [] });
-        saveFriends();
-        renderFriendNav();
+        if (friends.some(f => f.url === url)) { showToast('Friend already added'); return; }
+        friends.push({ url, user: 'Loading…', library: [] }); saveFriends(); renderFriendNav();
         syncFriend(friends.length - 1);
     }
 
     function removeFriend(idx) {
         if (!confirm(`Remove friend "${friends[idx].user}"?`)) return;
-        friends.splice(idx, 1);
-        saveFriends();
-        renderFriendNav();
-        if (activeFriendIdx !== null) {
-            activeFriendIdx = null;
-            showEmpty();
-        }
+        friends.splice(idx, 1); saveFriends(); renderFriendNav();
+        if (activeFriendIdx !== null) { activeFriendIdx = null; showEmpty(); }
         showToast('Friend removed');
     }
 
     async function syncFriend(idx) {
         try {
-            const res  = await fetch(friends[idx].url + '?t=' + Date.now());
+            const res = await fetch(friends[idx].url + '?t=' + Date.now());
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
-            friends[idx].user    = data.user    || 'Unknown';
+            friends[idx].user = data.user || 'Unknown';
             friends[idx].library = data.library || data.games || [];
-            saveFriends();
-            renderFriendNav();
+            saveFriends(); renderFriendNav();
             if (activeFriendIdx === idx) selectFriend(idx);
             showToast(`✓ Synced ${friends[idx].user}`);
         } catch (e) {
             friends[idx].user = friends[idx].user === 'Loading…' ? 'Sync Failed' : friends[idx].user;
-            saveFriends();
-            renderFriendNav();
-            showToast('Friend sync failed — check the URL');
-            console.warn('Friend sync failed', e);
+            saveFriends(); renderFriendNav(); showToast('Friend sync failed — check the URL');
         }
     }
 
-    /* ═══════════════════════════════════════════════
-       GAME CRUD
-    ═══════════════════════════════════════════════ */
     function resolveGameUrl(folder) {
         if (!folder) return '';
         if (folder.startsWith('http://') || folder.startsWith('https://')) return folder;
@@ -1348,108 +1271,76 @@
     }
 
     function saveGame() {
-        const name   = document.getElementById('add-name').value.trim();
+        const name = document.getElementById('add-name').value.trim();
         const folder = document.getElementById('add-folder').value.trim();
-        const banner = document.getElementById('add-banner').value.trim();
-        const video  = document.getElementById('add-video').value.trim();
-        const desc   = document.getElementById('add-desc').value.trim();
-
         if (!name) { showToast('Please enter a game name'); return; }
         if (!folder) { showToast('Please enter a folder name or URL'); return; }
-
         myGames.push({
-            name,
-            folder,
-            banner,
-            video,
-            desc,
-            playtime: 0,
-            added: Date.now()
+            name, folder,
+            banner: document.getElementById('add-banner').value.trim(),
+            video: document.getElementById('add-video').value.trim(),
+            desc: document.getElementById('add-desc').value.trim(),
+            playtime: 0, added: Date.now()
         });
-
-        save();
-        clearAddForm();
-        closeModals();
-        refreshUI();
-        selectGame(myGames.length - 1);
-        showToast(`✓ "${name}" added to library`);
+        save(); clearAddForm(); closeModals(); refreshUI();
+        selectGame(myGames.length - 1); showToast(`✓ "${name}" added to library`);
     }
 
     function clearAddForm() {
-        ['add-name', 'add-folder', 'add-banner', 'add-video', 'add-desc']
-            .forEach(id => document.getElementById(id).value = '');
+        ['add-name','add-folder','add-banner','add-video','add-desc'].forEach(id => document.getElementById(id).value = '');
     }
 
     function openEditModal(idx) {
         const g = myGames[idx];
-        document.getElementById('edit-idx').value    = idx;
-        document.getElementById('edit-name').value   = g.name   || '';
+        document.getElementById('edit-idx').value = idx;
+        document.getElementById('edit-name').value = g.name || '';
         document.getElementById('edit-folder').value = g.folder || '';
         document.getElementById('edit-banner').value = g.banner || '';
-        document.getElementById('edit-video').value  = g.video  || '';
-        document.getElementById('edit-desc').value   = g.desc   || '';
+        document.getElementById('edit-video').value = g.video || '';
+        document.getElementById('edit-desc').value = g.desc || '';
         document.getElementById('modal-edit').style.display = 'flex';
     }
 
     function updateGame() {
         const idx = parseInt(document.getElementById('edit-idx').value);
         if (isNaN(idx) || !myGames[idx]) return;
-
-        const name   = document.getElementById('edit-name').value.trim();
+        const name = document.getElementById('edit-name').value.trim();
         const folder = document.getElementById('edit-folder').value.trim();
-        if (!name)   { showToast('Game name is required'); return; }
+        if (!name) { showToast('Game name is required'); return; }
         if (!folder) { showToast('Folder or URL is required'); return; }
-
-        myGames[idx].name   = name;
-        myGames[idx].folder = folder;
+        myGames[idx].name = name; myGames[idx].folder = folder;
         myGames[idx].banner = document.getElementById('edit-banner').value.trim();
-        myGames[idx].video  = document.getElementById('edit-video').value.trim();
-        myGames[idx].desc   = document.getElementById('edit-desc').value.trim();
-
-        save();
-        closeModals();
-        refreshUI();
-        selectGame(idx);
+        myGames[idx].video = document.getElementById('edit-video').value.trim();
+        myGames[idx].desc = document.getElementById('edit-desc').value.trim();
+        save(); closeModals(); refreshUI(); selectGame(idx);
         showToast(`✓ "${name}" updated`);
     }
 
     function removeGame(idx) {
-        if (!confirm(`Remove "${myGames[idx].name}" from your library?`)) return;
-        const name = myGames[idx].name;
-        myGames.splice(idx, 1);
-        save();
-        refreshUI();
-        if (myGames.length > 0) {
-            selectGame(Math.max(0, idx - 1));
-        } else {
-            activeIdx = -1;
-            showEmpty();
-        }
+        const g = myGames[idx]; if (!g) return;
+        if (!confirm(`Remove "${g.name}" from your library?`)) return;
+        const name = g.name; myGames.splice(idx, 1);
+        if (g.builtin && g.folder) { hiddenBuiltin.push(g.folder); saveHidden(); }
+        save(); refreshUI();
+        if (myGames.length > 0) selectGame(Math.max(0, idx - 1));
+        else { activeIdx = -1; showEmpty(); }
         showToast(`"${name}" removed`);
     }
 
-    /* ═══════════════════════════════════════════════
-       PLAYTIME
-    ═══════════════════════════════════════════════ */
     function startPlaytimeTracking(idx) {
-        playStartTime = Date.now();
-        let elapsed = 0;
+        playStartTime = Date.now(); let elapsed = 0;
         clearInterval(playTimerInt);
         playTimerInt = setInterval(() => {
             elapsed++;
-            document.getElementById('play-timer-tag').textContent =
-                `PLAYING • ${fmtSeconds(elapsed)}`;
+            document.getElementById('play-timer-tag').textContent = `PLAYING • ${fmtSeconds(elapsed)}`;
         }, 1000);
     }
 
     function stopPlaytimeTracking(idx) {
-        clearInterval(playTimerInt);
-        playTimerInt = null;
+        clearInterval(playTimerInt); playTimerInt = null;
         if (playStartTime === null || !myGames[idx]) return;
-        const elapsed = Date.now() - playStartTime;
-        myGames[idx].playtime = (myGames[idx].playtime || 0) + elapsed;
-        save();
-        playStartTime = null;
+        myGames[idx].playtime = (myGames[idx].playtime || 0) + (Date.now() - playStartTime);
+        save(); playStartTime = null;
         document.getElementById('play-timer-tag').textContent = 'PLAYING • 0:00';
         updatePlaytimeDisplay(idx);
     }
@@ -1459,34 +1350,21 @@
         document.getElementById('tb-playtime').textContent = fmtTime(myGames[idx].playtime || 0);
     }
 
-    /* ═══════════════════════════════════════════════
-       GAME OVERLAY
-    ═══════════════════════════════════════════════ */
     function launchGame(idx) {
-        const game = myGames[idx];
-        if (!game) return;
+        const game = myGames[idx]; if (!game) return;
         activeIdx = idx;
-        const url = resolveGameUrl(game.folder);
         document.getElementById('active-game-title').textContent = game.name;
-        document.getElementById('game-frame').src = url;
-        const overlay = document.getElementById('game-overlay');
-        overlay.style.display = 'flex';
+        document.getElementById('game-frame').src = resolveGameUrl(game.folder);
+        document.getElementById('game-overlay').style.display = 'flex';
         startPlaytimeTracking(idx);
     }
 
     function closeGame() {
-        const overlay = document.getElementById('game-overlay');
-        overlay.style.display = 'none';
+        document.getElementById('game-overlay').style.display = 'none';
         document.getElementById('game-frame').src = '';
-        if (activeIdx >= 0) {
-            stopPlaytimeTracking(activeIdx);
-            renderLibNav();
-        }
+        if (activeIdx >= 0) { stopPlaytimeTracking(activeIdx); renderLibNav(); }
     }
 
-    /* ═══════════════════════════════════════════════
-       VIEWS
-    ═══════════════════════════════════════════════ */
     function showEmpty() {
         document.getElementById('view-toolbar').style.display = 'none';
         document.getElementById('breadcrumb-current').textContent = '—';
@@ -1494,45 +1372,24 @@
             <div class="empty-state">
                 <div class="empty-icon">🎮</div>
                 <div class="empty-title">Your Library is Empty</div>
-                <div class="empty-sub">Add your first game to get started.
-                    Click <strong>+ Add Game</strong> above.</div>
-                <button class="empty-action"
-                    onclick="document.getElementById('modal-add').style.display='flex'">
-                    + Add Your First Game
-                </button>
+                <div class="empty-sub">Add your first game to get started. Click <strong>+ Add Game</strong> above.</div>
+                <button class="empty-action" onclick="document.getElementById('modal-add').style.display='flex'">+ Add Your First Game</button>
             </div>`;
     }
 
     function selectGame(idx) {
-        activeIdx       = idx;
-        activeFriendIdx = null;
-        const game = myGames[idx];
-        if (!game) { showEmpty(); return; }
-
-        document.querySelectorAll('#nav-lib .nav-item')
-            .forEach((el, i) => el.classList.toggle('active', i === idx));
-        document.querySelectorAll('#nav-friends .nav-item')
-            .forEach(el => el.classList.remove('active'));
-
+        activeIdx = idx; activeFriendIdx = null;
+        const game = myGames[idx]; if (!game) { showEmpty(); return; }
+        document.querySelectorAll('#nav-lib .nav-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+        document.querySelectorAll('#nav-friends .nav-item').forEach(el => el.classList.remove('active'));
         document.getElementById('breadcrumb-current').textContent = game.name;
-
-        const toolbar = document.getElementById('view-toolbar');
-        toolbar.style.display = 'flex';
-
-        document.getElementById('tb-play-btn').onclick   = () => launchGame(idx);
-        document.getElementById('tb-edit-btn').onclick   = () => openEditModal(idx);
-        document.getElementById('tb-store-btn').onclick  = () =>
-            window.open(
-                `https://store.steampowered.com/search/?term=${encodeURIComponent(game.name)}`,
-                '_blank'
-            );
+        document.getElementById('view-toolbar').style.display = 'flex';
+        document.getElementById('tb-play-btn').onclick = () => launchGame(idx);
+        document.getElementById('tb-edit-btn').onclick = () => openEditModal(idx);
+        document.getElementById('tb-store-btn').onclick = () => window.open(`https://store.steampowered.com/search/?term=${encodeURIComponent(game.name)}`, '_blank');
         document.getElementById('tb-remove-btn').onclick = () => removeGame(idx);
         updatePlaytimeDisplay(idx);
-
-        const bannerStyle = game.banner
-            ? `background-image:url('${game.banner}')`
-            : `background: linear-gradient(135deg, #0d1b2a, #1a3a5c)`;
-
+        const bannerStyle = game.banner ? `background-image:url('${game.banner}')` : `background: linear-gradient(135deg, #0d1b2a, #1a3a5c)`;
         document.getElementById('view-port').innerHTML = `
             <div class="hero" style="${bannerStyle}">
                 <div class="hero-badge">In Library</div>
@@ -1545,200 +1402,86 @@
                 <div class="detail-grid">
                     <div>
                         <div class="detail-desc">${game.desc || 'No description provided.'}</div>
-                        ${game.video ? `
-                        <div class="video-embed">
-                            <iframe src="https://www.youtube.com/embed/${game.video}?rel=0"
-                                allowfullscreen allow="autoplay; encrypted-media"></iframe>
-                        </div>` : ''}
+                        ${game.video ? `<div class="video-embed"><iframe src="https://www.youtube.com/embed/${game.video}?rel=0" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>` : ''}
                     </div>
                     <div class="info-panel">
                         <div class="info-card">
                             <div class="info-card-title">Game Info</div>
-                            <div class="info-row">
-                                <span class="key">Source</span>
-                                <span class="val" style="max-width:160px;overflow:hidden;
-                                    text-overflow:ellipsis;white-space:nowrap;"
-                                    title="${game.folder}">${game.folder}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="key">Playtime</span>
-                                <span class="val">${fmtTime(game.playtime || 0)}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="key">Added</span>
-                                <span class="val">${new Date(game.added).toLocaleDateString()}</span>
-                            </div>
+                            <div class="info-row"><span class="key">Source</span><span class="val" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${game.folder}">${game.folder}</span></div>
+                            <div class="info-row"><span class="key">Playtime</span><span class="val">${fmtTime(game.playtime || 0)}</span></div>
+                            <div class="info-row"><span class="key">Added</span><span class="val">${new Date(game.added).toLocaleDateString()}</span></div>
                         </div>
-                        <button class="tool-btn primary"
-                            style="width:100%;justify-content:center;padding:14px;font-size:14px;"
-                            onclick="launchGame(${idx})">▶ Play Now</button>
-                        <button class="tool-btn"
-                            style="width:100%;justify-content:center;border:1px solid var(--border);"
-                            onclick="openEditModal(${idx})">✎ Edit Game</button>
+                        <button class="tool-btn primary" style="width:100%;justify-content:center;padding:14px;font-size:14px;" onclick="launchGame(${idx})">▶ Play Now</button>
+                        <button class="tool-btn" style="width:100%;justify-content:center;border:1px solid var(--border);" onclick="openEditModal(${idx})">✎ Edit Game</button>
                     </div>
                 </div>
             </div>`;
     }
 
     function selectFriend(idx) {
-        activeFriendIdx = idx;
-        const friend = friends[idx];
-        if (!friend) return;
-
-        document.querySelectorAll('#nav-lib .nav-item')
-            .forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('#nav-friends .nav-item')
-            .forEach((el, i) => el.classList.toggle('active', i === idx));
-
+        activeFriendIdx = idx; const friend = friends[idx]; if (!friend) return;
+        document.querySelectorAll('#nav-lib .nav-item').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('#nav-friends .nav-item').forEach((el, i) => el.classList.toggle('active', i === idx));
         document.getElementById('breadcrumb-current').textContent = friend.user;
         document.getElementById('view-toolbar').style.display = 'none';
-
         const initials = friend.user.slice(0, 2).toUpperCase();
         const gamesHTML = friend.library.length > 0
-            ? `<div class="friends-library-grid">
-                ${friend.library.map(g => `
-                    <div class="friend-game-card">
-                        ${g.banner
-                            ? `<img src="${g.banner}" style="width:100%;height:90px;
-                               object-fit:cover;border-radius:6px;margin-bottom:8px;">`
-                            : ''}
-                        <div class="game-name">${g.name}</div>
-                        <div class="game-time">${fmtTime(g.playtime || 0)} played</div>
-                    </div>`).join('')}
-               </div>`
-            : `<div class="empty-state" style="height:200px;">
-                <div class="empty-icon" style="font-size:36px;">📭</div>
-                <div class="empty-sub">No games in this friend's library yet.</div>
-               </div>`;
-
+            ? `<div class="friends-library-grid">${friend.library.map(g => `<div class="friend-game-card">${g.banner ? `<img src="${g.banner}" style="width:100%;height:90px;object-fit:cover;border-radius:6px;margin-bottom:8px;">` : ''}<div class="game-name">${g.name}</div><div class="game-time">${fmtTime(g.playtime || 0)} played</div></div>`).join('')}</div>`
+            : `<div class="empty-state" style="height:200px;"><div class="empty-icon" style="font-size:36px;">📭</div><div class="empty-sub">No games in this friend's library yet.</div></div>`;
         document.getElementById('view-port').innerHTML = `
             <div class="friends-view">
                 <div class="friends-header">
                     <div class="avatar large">${initials}</div>
                     <div class="friends-header-info">
                         <h2>${friend.user}</h2>
-                        <p>${friend.library.length} game${friend.library.length !== 1 ? 's' : ''}
-                            in library &nbsp;·&nbsp;
-                            <a href="#" onclick="syncFriend(${idx});return false;"
-                               style="color:var(--accent);text-decoration:none;">↻ Sync</a>
-                            &nbsp;·&nbsp;
-                            <a href="#" onclick="removeFriend(${idx});return false;"
-                               style="color:var(--mac-red);text-decoration:none;">Remove</a>
-                        </p>
+                        <p>${friend.library.length} game${friend.library.length !== 1 ? 's' : ''} in library &nbsp;·&nbsp; <a href="#" onclick="syncFriend(${idx});return false;" style="color:var(--accent);text-decoration:none;">↻ Sync</a> &nbsp;·&nbsp; <a href="#" onclick="removeFriend(${idx});return false;" style="color:var(--mac-red);text-decoration:none;">Remove</a></p>
                     </div>
                 </div>
                 ${gamesHTML}
             </div>`;
     }
 
-    /* ═══════════════════════════════════════════════
-       SEARCH
-    ═══════════════════════════════════════════════ */
     function handleSearch(query) {
-        searchQuery = query.toLowerCase().trim();
-        renderLibNav();
-        if (searchQuery) {
-            const first = myGames.findIndex(g =>
-                g.name.toLowerCase().includes(searchQuery));
-            if (first !== -1) selectGame(first);
-        }
+        searchQuery = query.toLowerCase().trim(); renderLibNav();
+        if (searchQuery) { const first = myGames.findIndex(g => g.name.toLowerCase().includes(searchQuery)); if (first !== -1) selectGame(first); }
     }
 
-    /* ═══════════════════════════════════════════════
-       NAV RENDERING
-    ═══════════════════════════════════════════════ */
     function renderLibNav() {
         const nav = document.getElementById('nav-lib');
-        const filtered = myGames
-            .map((g, i) => ({ g, i }))
-            .filter(({ g }) => !searchQuery || g.name.toLowerCase().includes(searchQuery));
-
-        if (filtered.length === 0) {
-            nav.innerHTML = `<div style="padding:8px 10px;color:var(--text-muted);font-size:12px;">
-                ${searchQuery ? 'No results' : 'No games yet'}</div>`;
-            return;
-        }
-
-        nav.innerHTML = filtered.map(({ g, i }) => `
-            <div class="nav-item ${i === activeIdx && activeFriendIdx === null ? 'active' : ''}"
-                 onclick="selectGame(${i})">
-                <div class="icon">🎮</div>
-                <span class="name">${g.name}</span>
-                <span class="badge">${fmtTime(g.playtime || 0)}</span>
-            </div>`).join('');
+        const filtered = myGames.map((g, i) => ({ g, i })).filter(({ g }) => !searchQuery || g.name.toLowerCase().includes(searchQuery));
+        if (filtered.length === 0) { nav.innerHTML = `<div style="padding:8px 10px;color:var(--text-muted);font-size:12px;">${searchQuery ? 'No results' : 'No games yet'}</div>`; return; }
+        nav.innerHTML = filtered.map(({ g, i }) => `<div class="nav-item ${i === activeIdx && activeFriendIdx === null ? 'active' : ''}" onclick="selectGame(${i})"><div class="icon">🎮</div><span class="name">${g.name}</span>${g.builtin ? '<span class="builtin-tag">app</span>' : ''}<span class="badge">${fmtTime(g.playtime || 0)}</span></div>`).join('');
     }
 
     function renderFriendNav() {
         const nav = document.getElementById('nav-friends');
-        if (friends.length === 0) {
-            nav.innerHTML = `<div style="padding:8px 10px;color:var(--text-muted);font-size:12px;">
-                No friends added</div>`;
-            return;
-        }
-        nav.innerHTML = friends.map((f, i) => `
-            <div class="nav-item ${i === activeFriendIdx ? 'active' : ''}"
-                 onclick="selectFriend(${i})">
-                <div class="icon">👤</div>
-                <span class="name">${f.user}</span>
-                <span class="badge">${f.library.length}</span>
-            </div>`).join('');
+        if (friends.length === 0) { nav.innerHTML = `<div style="padding:8px 10px;color:var(--text-muted);font-size:12px;">No friends added</div>`; return; }
+        nav.innerHTML = friends.map((f, i) => `<div class="nav-item ${i === activeFriendIdx ? 'active' : ''}" onclick="selectFriend(${i})"><div class="icon">👤</div><span class="name">${f.user}</span><span class="badge">${f.library.length}</span></div>`).join('');
     }
 
-    /* ═══════════════════════════════════════════════
-       PROFILE UI
-    ═══════════════════════════════════════════════ */
     function refreshUI() {
         const name = localStorage.getItem('gh_user') || 'Guest';
         document.getElementById('user-display-name').textContent = name;
         document.getElementById('user-initial').textContent = name.slice(0, 1).toUpperCase();
-        renderLibNav();
-        renderFriendNav();
+        renderLibNav(); renderFriendNav();
     }
 
-    /* ═══════════════════════════════════════════════
-       KEYBOARD SHORTCUTS
-    ═══════════════════════════════════════════════ */
     document.addEventListener('keydown', e => {
         const overlay = document.getElementById('game-overlay');
-        if (e.key === 'Escape') {
-            if (overlay.style.display === 'flex') closeGame();
-            else closeModals();
-        }
-        if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
-            e.preventDefault();
-            document.getElementById('modal-add').style.display = 'flex';
-        }
-        if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-            e.preventDefault();
-            document.getElementById('search-input').focus();
-        }
-        // Arrow keys to navigate library
+        if (e.key === 'Escape') { if (overlay.style.display === 'flex') closeGame(); else closeModals(); }
+        if ((e.metaKey || e.ctrlKey) && e.key === 'n') { e.preventDefault(); document.getElementById('modal-add').style.display = 'flex'; }
+        if ((e.metaKey || e.ctrlKey) && e.key === 'f') { e.preventDefault(); document.getElementById('search-input').focus(); }
         if (overlay.style.display !== 'flex' && myGames.length > 0) {
-            if (e.key === 'ArrowDown' && activeFriendIdx === null) {
-                e.preventDefault();
-                selectGame(Math.min(activeIdx + 1, myGames.length - 1));
-            }
-            if (e.key === 'ArrowUp' && activeFriendIdx === null) {
-                e.preventDefault();
-                selectGame(Math.max(activeIdx - 1, 0));
-            }
-            if (e.key === 'Enter' && activeIdx >= 0 && activeFriendIdx === null) {
-                launchGame(activeIdx);
-            }
+            if (e.key === 'ArrowDown' && activeFriendIdx === null) { e.preventDefault(); selectGame(Math.min(activeIdx + 1, myGames.length - 1)); }
+            if (e.key === 'ArrowUp' && activeFriendIdx === null) { e.preventDefault(); selectGame(Math.max(activeIdx - 1, 0)); }
+            if (e.key === 'Enter' && activeIdx >= 0 && activeFriendIdx === null) { launchGame(activeIdx); }
         }
     });
 
-    /* Close modal on backdrop click */
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', e => {
-            if (e.target === modal) closeModals();
-        });
-    });
+    document.querySelectorAll('.modal').forEach(modal => { modal.addEventListener('click', e => { if (e.target === modal) closeModals(); }); });
 
-    /* ═══════════════════════════════════════════════
-       INIT
-    ═══════════════════════════════════════════════ */
-    (function init() {
+    (async function init() {
+        await loadManifest();
         refreshUI();
         friends.forEach((_, i) => syncFriend(i));
         if (myGames.length > 0) selectGame(0);
