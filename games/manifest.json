@@ -1,9 +1,107 @@
 [
   {
-    "name": "Example Game",
-    "folder": "example-game",
+    "name": "1v1LOL",
+    "folder": "1v1LOL",
     "banner": "",
     "video": "",
-    "desc": "Replace this with real game folders. Delete games/example-game/ when you add your own."
+    "desc": ""
+  },
+  {
+    "name": "Axiom",
+    "folder": "Axiom",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "CookieClicker",
+    "folder": "CookieClicker",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "Cuphead",
+    "folder": "Cuphead",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "Doom",
+    "folder": "Doom",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "DriveMad",
+    "folder": "DriveMad",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "FNAF1",
+    "folder": "FNAF1",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "FNAF4",
+    "folder": "FNAF4",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "GeometryDash",
+    "folder": "GeometryDash",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "Hollow Knight",
+    "folder": "Hollow-Knight",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "Ovo3",
+    "folder": "ovo3",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "Slope",
+    "folder": "Slope",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "SonicMania",
+    "folder": "SonicMania",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "SuperMario64",
+    "folder": "SuperMario64",
+    "banner": "",
+    "video": "",
+    "desc": ""
+  },
+  {
+    "name": "Undertale",
+    "folder": "Undertale",
+    "banner": "",
+    "video": "",
+    "desc": ""
   }
 ]
