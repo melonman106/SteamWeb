@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Steam Pro</title>
+        <link rel="manifest" href="/pwa-manifest.json">
+    <meta name="theme-color" content="#0a0a0f">
+
     <style>
         :root {
             --mac-red: #ff5f56;
@@ -901,6 +904,14 @@
     </style>
 </head>
 <body>
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(console.warn);
+        });
+    }
+</script>
+
 
 <div id="game-overlay">
     <div class="game-titlebar">
