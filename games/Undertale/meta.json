@@ -1,6 +1,6 @@
 {
   "name": "Undertale",
   "desc": "A minimal example. Copy this folder structure for each new game.",
-  "banner": "./assets/undetale.png",
+  "banner": "/assets/undetale.png",
   "video": ""
 }
