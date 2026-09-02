@@ -1,13 +1,4 @@
 #!/usr/bin/env node
-/**
- * Scans ./games/*/ for subdirectories containing an index.html
- * and generates ./games/manifest.json.
- *
- * Each game folder may optionally include a meta.json:
- *   { "name": "Snake", "desc": "Classic snake", "banner": "url", "video": "ytId" }
- *
- * If meta.json is missing, the folder name is used as the game name.
- */
 const fs = require('fs');
 const path = require('path');
 
